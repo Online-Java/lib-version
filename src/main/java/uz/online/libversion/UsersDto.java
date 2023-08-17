@@ -1,18 +1,21 @@
 package uz.online.libversion;
 
-import lombok.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
+import lombok.*;
+import java.util.*;
+import javax.validation.constraints.*;
 
 @Getter
 @Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class UsersDto {
+//@JsonIgnoreProperties(value = "password", allowSetters = true)
+public class UsersDto implements UserDetails {
     private Integer id;
     @NotBlank(message = "firstName is null or not contains any character")
     private String firstName;
@@ -23,7 +26,7 @@ public class UsersDto {
     private String birthDate;
     private String passport;
     private Long pinfl;
-//    @UserExists(message = "User is already exists")
+    //@UserExists(message = "User is already exists")
     private String username;
     @Size(min = 6, message = "Password must contain at least 6 character")
     private String password;
@@ -33,6 +36,39 @@ public class UsersDto {
     @Email(message = "Email is incorrect")
     private String email;
 
-//    private Set<Authorities> authority;
+    @JsonIgnore
+    private List<AuthorityDto> authorities;
 
+    @Override
+    @JsonIgnore
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return Optional.of(authorities)
+                .map(auth -> auth.stream()
+                        .map(a -> new SimpleGrantedAuthority(a.getAuthority()))
+                        .toList())
+                .orElse(new ArrayList<>());
+    }
+
+    @Override
+    @JsonIgnore
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    @JsonIgnore
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    @JsonIgnore
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
 }
